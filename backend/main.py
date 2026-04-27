@@ -11,14 +11,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print("🔥 APP STARTING...")
+print(" APP STARTING...")
 
 app = FastAPI()
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # later restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,9 +26,8 @@ app.add_middleware(
 
 # OpenAI
 api_key = os.getenv("OPENAI_API_KEY")
-
 if not api_key:
-    raise Exception("OPENAI_API_KEY missing ")
+    raise Exception("OPENAI_API_KEY missing")
 
 client_ai = OpenAI(api_key=api_key)
 
@@ -40,18 +39,21 @@ scheduled_collection = db["scheduled_posts"]
 posts_collection = db["posts"]
 users_collection = db["users"]
 
-# 🔐 AUTH CONFIG
-SECRET_KEY = "mysecretkey"
+#  AUTH CONFIG
+SECRET_KEY = os.getenv("SECRET_KEY", "fallbacksecret")  # better than hardcoded
 ALGORITHM = "HS256"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# 🔐 HELPERS
+#  HELPERS
+
 def verify_password(plain, hashed):
+    plain = plain[:72]  #  bcrypt fix
     return pwd_context.verify(plain, hashed)
 
 def hash_password(password):
+    password = password[:72]  #  bcrypt fix
     return pwd_context.hash(password)
 
 def create_token(data: dict):
@@ -70,11 +72,15 @@ def verify_token(token: str = Depends(oauth2_scheme)):
 #  HOME
 @app.get("/")
 def home():
-    return {"message": "Backend is running 🚀"}
+    return {"message": "Backend is running "}
 
 #  SIGNUP
 @app.post("/signup")
 def signup(username: str = Form(...), password: str = Form(...)):
+
+    if len(password) > 72:
+        raise HTTPException(status_code=400, detail="Password too long (max 72 chars)")
+
     existing_user = users_collection.find_one({"username": username})
 
     if existing_user:
@@ -90,6 +96,7 @@ def signup(username: str = Form(...), password: str = Form(...)):
 #  LOGIN
 @app.post("/login")
 def login(username: str = Form(...), password: str = Form(...)):
+
     user = users_collection.find_one({"username": username})
 
     if not user:
@@ -99,7 +106,11 @@ def login(username: str = Form(...), password: str = Form(...)):
         raise HTTPException(status_code=401, detail="Wrong password")
 
     token = create_token({"sub": username})
-    return {"access_token": token, "token_type": "bearer"}
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
 
 #  GENERATE (Protected)
 @app.get("/generate")
@@ -135,8 +146,7 @@ def get_posts(user=Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-#  GET SCHEDULED POSTS
-
+#  SCHEDULE POST
 @app.post("/schedule")
 def schedule_post(data: dict, user=Depends(verify_token)):
     try:
@@ -149,12 +159,12 @@ def schedule_post(data: dict, user=Depends(verify_token)):
             "created_at": datetime.utcnow()
         })
 
-        return {"msg": "Post scheduled successfully 🚀"}
+        return {"msg": "Post scheduled successfully "}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+#  GET SCHEDULED POSTS
 @app.get("/scheduled")
 def get_scheduled(user=Depends(verify_token)):
     try:
@@ -168,6 +178,7 @@ def get_scheduled(user=Depends(verify_token)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 #  TEST DB
 @app.get("/testdb")
 def test_db():
