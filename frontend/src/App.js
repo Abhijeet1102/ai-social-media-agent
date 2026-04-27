@@ -9,14 +9,15 @@ function App() {
     const [date, setDate] = useState("");
     const [time, setTime] = useState("");
 
-    // LOGIN / SIGNUP
+    // AUTH
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isSignup, setIsSignup] = useState(false);
 
-    // DASHBOARD
+    // DATA
     const [posts, setPosts] = useState([]);
+    const [scheduledData, setScheduledData] = useState([]);
 
     // AUTO LOGIN
     useEffect(() => {
@@ -24,11 +25,14 @@ function App() {
         if (token) setIsLoggedIn(true);
     }, []);
 
-    // FETCH POSTS
     useEffect(() => {
-        if (isLoggedIn) fetchPosts();
+        if (isLoggedIn) {
+            fetchPosts();
+            fetchScheduled();
+        }
     }, [isLoggedIn]);
 
+    // FETCH POSTS
     const fetchPosts = async() => {
         const token = localStorage.getItem("token");
 
@@ -42,7 +46,21 @@ function App() {
         setPosts(data);
     };
 
-    // 🔐 LOGIN (FIXED)
+    // FETCH SCHEDULED
+    const fetchScheduled = async() => {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://127.0.0.1:8000/scheduled", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const data = await res.json();
+        setScheduledData(data);
+    };
+
+    // LOGIN
     const handleLogin = async() => {
         const res = await fetch("http://127.0.0.1:8000/login", {
             method: "POST",
@@ -59,11 +77,11 @@ function App() {
             setIsLoggedIn(true);
             alert("Login Successful 🚀");
         } else {
-            alert(data.detail || "Login Failed ❌");
+            alert(data.detail || "Login Failed");
         }
     };
 
-    // 🔥 SIGNUP (FIXED)
+    // SIGNUP
     const handleSignup = async() => {
         const res = await fetch("http://127.0.0.1:8000/signup", {
             method: "POST",
@@ -77,9 +95,7 @@ function App() {
 
         alert(data.msg || data.detail);
 
-        if (data.msg) {
-            setIsSignup(false);
-        }
+        if (data.msg) setIsSignup(false);
     };
 
     // LOGOUT
@@ -87,6 +103,7 @@ function App() {
         localStorage.removeItem("token");
         setIsLoggedIn(false);
         setPosts([]);
+        setScheduledData([]);
         setResult("");
     };
 
@@ -108,7 +125,7 @@ function App() {
         fetchPosts();
     };
 
-    // SCHEDULE (API BASED)
+    // SCHEDULE
     const schedulePost = async() => {
         const token = localStorage.getItem("token");
 
@@ -135,20 +152,21 @@ function App() {
 
         setDate("");
         setTime("");
+
+        fetchScheduled(); //  important
     };
 
     return ( <
-        div className = "app" >
-
-        { /* HERO */ } <
+        div className = "app" > { /* HERO */ } <
         header className = "hero" >
         <
-        h1 > 🚀AI Social Media Automation < /h1> <
+        h1 > AI Social Media Automation < /h1> <
         p > Create, Schedule & Grow with AI < /p>
 
         <
         button onClick = {
-            () => setShowModal(true) } >
+            () => setShowModal(true)
+        } >
         Connect Accounts <
         /button>
 
@@ -156,7 +174,8 @@ function App() {
             isLoggedIn && ( <
                 button onClick = { handleLogout }
                 style = {
-                    { marginLeft: "10px" } } >
+                    { marginLeft: "10px" }
+                } >
                 Logout <
                 /button>
             )
@@ -166,7 +185,8 @@ function App() {
         { /* LOGIN / SIGNUP */ } {
             !isLoggedIn && ( <
                 div style = {
-                    { marginTop: "20px", textAlign: "center" } } >
+                    { textAlign: "center", marginTop: "20px" }
+                } >
                 <
                 h3 > { isSignup ? "Signup" : "Login" } < /h3>
 
@@ -174,7 +194,8 @@ function App() {
                 input placeholder = "Username"
                 value = { username }
                 onChange = {
-                    (e) => setUsername(e.target.value) }
+                    (e) => setUsername(e.target.value)
+                }
                 />
 
                 <
@@ -185,7 +206,8 @@ function App() {
                 placeholder = "Password"
                 value = { password }
                 onChange = {
-                    (e) => setPassword(e.target.value) }
+                    (e) => setPassword(e.target.value)
+                }
                 />
 
                 <
@@ -201,28 +223,20 @@ function App() {
 
                 <
                 p style = {
-                    {
-                        cursor: "pointer",
-                        color: "#4f46e5",
-                        marginTop: "12px",
-                        fontWeight: "600",
-                        textDecoration: "underline",
-                        fontSize: "14px",
-                    }
+                    { cursor: "pointer", color: "blue", marginTop: "10px" }
                 }
                 onClick = {
-                    () => setIsSignup(!isSignup) } >
-                {
+                    () => setIsSignup(!isSignup)
+                } > {
                     isSignup ?
-                    "Already have account? Login" :
-                        "New user? Signup"
+                    "Already have account? Login" : "New user? Signup"
                 } <
-                /p> <
-                /div>
+                /p> < /
+                div >
             )
         }
 
-        { /* GENERATOR */ } {
+        { /* GENERATE */ } {
             isLoggedIn && ( <
                 section className = "generator" >
                 <
@@ -233,7 +247,8 @@ function App() {
                 placeholder = "Enter topic..."
                 value = { topic }
                 onChange = {
-                    (e) => setTopic(e.target.value) }
+                    (e) => setTopic(e.target.value)
+                }
                 />
 
                 <
@@ -253,19 +268,19 @@ function App() {
                         input type = "date"
                         value = { date }
                         onChange = {
-                            (e) => setDate(e.target.value) }
-                        />
-
-                        <
+                            (e) => setDate(e.target.value)
+                        }
+                        /> <
                         input type = "time"
                         value = { time }
                         onChange = {
-                            (e) => setTime(e.target.value) }
+                            (e) => setTime(e.target.value)
+                        }
                         />
 
                         <
-                        button onClick = { schedulePost } > Schedule < /button> <
-                        /div>
+                        button onClick = { schedulePost } > Schedule < /button> < /
+                        div >
                     )
                 } <
                 /section>
@@ -276,7 +291,7 @@ function App() {
             isLoggedIn && ( <
                 section >
                 <
-                h2 > 📊Dashboard < /h2>
+                h2 > Dashboard < /h2>
 
                 {
                     posts.map((post, index) => ( <
@@ -284,8 +299,29 @@ function App() {
                         className = "result-card" >
                         <
                         p > { post.result } < /p> <
-                        small > Topic: { post.topic } < /small> <
-                        /div>
+                        small > Topic: { post.topic } < /small> < /
+                        div >
+                    ))
+                } <
+                /section>
+            )
+        }
+
+        { /*  NEW: SCHEDULED POSTS */ } {
+            isLoggedIn && ( <
+                section >
+                <
+                h2 > ⏳Scheduled Posts < /h2>
+
+                {
+                    scheduledData.map((post, index) => ( <
+                        div key = { index }
+                        className = "result-card" >
+                        <
+                        p > { post.content } < /p> <
+                        small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
+                        /small> < /
+                        div >
                     ))
                 } <
                 /section>
@@ -306,20 +342,74 @@ function App() {
                 button > 📸Instagram < /button> <
                 button > 💼LinkedIn < /button> <
                 button > ▶️YouTube < /button> <
-                button > 📘Facebook < /button> <
-                /div>
+                button > 📘Facebook < /button> < /
+                div >
 
                 <
                 button onClick = {
-                    () => setShowModal(false) } >
-                Close <
-                /button> <
-                /div> <
+                    () => setShowModal(false)
+                } > Close < /button> < /
+                div > <
                 /div>
             )
         } <
         /div>
     );
+}
+
+export default App;
+ction >
+)
+}
+
+{ /*  NEW: SCHEDULED POSTS */ } {
+    isLoggedIn && ( <
+        section >
+        <
+        h2 > ⏳Scheduled Posts < /h2>
+
+        {
+            scheduledData.map((post, index) => ( <
+                div key = { index }
+                className = "result-card" >
+                <
+                p > { post.content } < /p> <
+                small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
+                /small> < /
+                div >
+            ))
+        } <
+        /section>
+    )
+}
+
+{ /* MODAL */ } {
+    showModal && ( <
+        div className = "modal" >
+        <
+        div className = "modal-content" >
+        <
+        h2 > Connect Your Accounts < /h2>
+
+        <
+        div className = "icons" >
+        <
+        button > 📸Instagram < /button> <
+        button > 💼LinkedIn < /button> <
+        button > ▶️YouTube < /button> <
+        button > 📘Facebook < /button> < /
+        div >
+
+        <
+        button onClick = {
+            () => setShowModal(false)
+        } > Close < /button> < /
+        div > <
+        /div>
+    )
+} <
+/div>
+);
 }
 
 export default App;

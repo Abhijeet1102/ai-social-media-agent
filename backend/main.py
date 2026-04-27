@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print("🔥 APP STARTING...")
+
 app = FastAPI()
 
 # CORS
@@ -23,7 +25,12 @@ app.add_middleware(
 )
 
 # OpenAI
-client_ai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise Exception("OPENAI_API_KEY missing ")
+
+client_ai = OpenAI(api_key=api_key)
 
 # MongoDB
 mongo_client = MongoClient("mongodb+srv://social_user:apnacollege@cluster0.dskqtu.mongodb.net/?appName=Cluster0")
@@ -60,12 +67,12 @@ def verify_token(token: str = Depends(oauth2_scheme)):
     except:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# 🚀 HOME
+#  HOME
 @app.get("/")
 def home():
     return {"message": "Backend is running 🚀"}
 
-# 🔥 SIGNUP
+#  SIGNUP
 @app.post("/signup")
 def signup(username: str = Form(...), password: str = Form(...)):
     existing_user = users_collection.find_one({"username": username})
@@ -80,7 +87,7 @@ def signup(username: str = Form(...), password: str = Form(...)):
 
     return {"msg": "User created successfully"}
 
-# 🔐 LOGIN
+#  LOGIN
 @app.post("/login")
 def login(username: str = Form(...), password: str = Form(...)):
     user = users_collection.find_one({"username": username})
@@ -94,7 +101,7 @@ def login(username: str = Form(...), password: str = Form(...)):
     token = create_token({"sub": username})
     return {"access_token": token, "token_type": "bearer"}
 
-# 🔥 GENERATE (Protected)
+#  GENERATE (Protected)
 @app.get("/generate")
 def generate(topic: str, user=Depends(verify_token)):
     try:
@@ -119,7 +126,7 @@ def generate(topic: str, user=Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 🔥 GET POSTS
+#  GET POSTS
 @app.get("/posts")
 def get_posts(user=Depends(verify_token)):
     try:
@@ -128,7 +135,7 @@ def get_posts(user=Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 🔥 GET SCHEDULED POSTS
+#  GET SCHEDULED POSTS
 
 @app.post("/schedule")
 def schedule_post(data: dict, user=Depends(verify_token)):
@@ -161,7 +168,7 @@ def get_scheduled(user=Depends(verify_token)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-# 🧪 TEST DB
+#  TEST DB
 @app.get("/testdb")
 def test_db():
     posts_collection.insert_one({"test": "working"})

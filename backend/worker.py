@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from datetime import datetime, UTC
 import time
 
-print("🔥 FILE STARTED")
+print(" FILE STARTED")
 
 # MongoDB
 client = MongoClient("mongodb+srv://social_user:apnacollege@cluster0.dskqtu.mongodb.net/?appName=Cluster0")
@@ -12,7 +12,7 @@ scheduled_collection = db["scheduled_posts"]
 logs_collection = db["logs"]
 
 def run_worker():
-    print("🚀 Worker started...")
+    print(" Worker started...")
 
     while True:
         now = datetime.now(UTC)
@@ -26,12 +26,12 @@ def run_worker():
                     "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=UTC)
 
-                # ⏰ check time (±30 sec window)
+                #  check time (±30 sec window)
                 if abs((scheduled_time - now).total_seconds()) <= 30:
 
-                    print("🚀 Posting:", post["content"])
+                    print(" Posting:", post["content"])
 
-                    # ✅ SUCCESS UPDATE
+                    #  SUCCESS UPDATE
                     scheduled_collection.update_one(
                         {"_id": post["_id"]},
                         {"$set": {
@@ -40,7 +40,7 @@ def run_worker():
                         }}
                     )
 
-                    # 📜 LOG SUCCESS
+                    #  LOG SUCCESS
                     logs_collection.insert_one({
                         "action": "post_success",
                         "content": post["content"],
@@ -48,9 +48,9 @@ def run_worker():
                     })
 
             except Exception as e:
-                print("❌ Error:", str(e))
+                print(" Error:", str(e))
 
-                # 🔁 Retry logic
+                #  Retry logic
                 retry_count = post.get("retry", 0)
 
                 if retry_count < 3:
@@ -67,14 +67,14 @@ def run_worker():
                         }}
                     )
 
-                # 📜 LOG FAILURE
+                #  LOG FAILURE
                 logs_collection.insert_one({
                     "action": "post_failed",
                     "error": str(e),
                     "time": datetime.now(UTC)
                 })
 
-        time.sleep(10)  # 🔁 every 10 sec
+        time.sleep(10)  #  every 10 sec
 
 
 if __name__ == "__main__":
