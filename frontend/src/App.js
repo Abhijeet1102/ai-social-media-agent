@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 function App() {
     const [topic, setTopic] = useState("");
     const [result, setResult] = useState("");
@@ -36,7 +38,7 @@ function App() {
     const fetchPosts = async() => {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://127.0.0.1:8000/posts", {
+        const res = await fetch(`${BASE_URL}/posts`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -50,7 +52,7 @@ function App() {
     const fetchScheduled = async() => {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://127.0.0.1:8000/scheduled", {
+        const res = await fetch(`${BASE_URL}/scheduled`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -62,7 +64,7 @@ function App() {
 
     // LOGIN
     const handleLogin = async() => {
-        const res = await fetch("http://127.0.0.1:8000/login", {
+        const res = await fetch(`${BASE_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -83,7 +85,7 @@ function App() {
 
     // SIGNUP
     const handleSignup = async() => {
-        const res = await fetch("http://127.0.0.1:8000/signup", {
+        const res = await fetch(`${BASE_URL}/signup`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -112,7 +114,7 @@ function App() {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-            `http://127.0.0.1:8000/generate?topic=${topic}`, {
+            `${BASE_URL}/generate?topic=${topic}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -134,7 +136,7 @@ function App() {
             return;
         }
 
-        const res = await fetch("http://127.0.0.1:8000/schedule", {
+        const res = await fetch(`${BASE_URL}/schedule`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -153,11 +155,13 @@ function App() {
         setDate("");
         setTime("");
 
-        fetchScheduled(); //  important
+        fetchScheduled();
     };
 
     return ( <
-        div className = "app" > { /* HERO */ } <
+        div className = "app" >
+
+        { /* HERO */ } <
         header className = "hero" >
         <
         h1 > AI Social Media Automation < /h1> <
@@ -165,8 +169,7 @@ function App() {
 
         <
         button onClick = {
-            () => setShowModal(true)
-        } >
+            () => setShowModal(true) } >
         Connect Accounts <
         /button>
 
@@ -174,8 +177,7 @@ function App() {
             isLoggedIn && ( <
                 button onClick = { handleLogout }
                 style = {
-                    { marginLeft: "10px" }
-                } >
+                    { marginLeft: "10px" } } >
                 Logout <
                 /button>
             )
@@ -185,8 +187,7 @@ function App() {
         { /* LOGIN / SIGNUP */ } {
             !isLoggedIn && ( <
                 div style = {
-                    { textAlign: "center", marginTop: "20px" }
-                } >
+                    { textAlign: "center", marginTop: "20px" } } >
                 <
                 h3 > { isSignup ? "Signup" : "Login" } < /h3>
 
@@ -194,8 +195,7 @@ function App() {
                 input placeholder = "Username"
                 value = { username }
                 onChange = {
-                    (e) => setUsername(e.target.value)
-                }
+                    (e) => setUsername(e.target.value) }
                 />
 
                 <
@@ -206,8 +206,7 @@ function App() {
                 placeholder = "Password"
                 value = { password }
                 onChange = {
-                    (e) => setPassword(e.target.value)
-                }
+                    (e) => setPassword(e.target.value) }
                 />
 
                 <
@@ -223,16 +222,16 @@ function App() {
 
                 <
                 p style = {
-                    { cursor: "pointer", color: "blue", marginTop: "10px" }
-                }
+                    { cursor: "pointer", color: "blue", marginTop: "10px" } }
                 onClick = {
-                    () => setIsSignup(!isSignup)
-                } > {
+                    () => setIsSignup(!isSignup) } >
+                {
                     isSignup ?
-                    "Already have account? Login" : "New user? Signup"
+                    "Already have account? Login" :
+                        "New user? Signup"
                 } <
-                /p> < /
-                div >
+                /p> <
+                /div>
             )
         }
 
@@ -247,8 +246,7 @@ function App() {
                 placeholder = "Enter topic..."
                 value = { topic }
                 onChange = {
-                    (e) => setTopic(e.target.value)
-                }
+                    (e) => setTopic(e.target.value) }
                 />
 
                 <
@@ -268,19 +266,19 @@ function App() {
                         input type = "date"
                         value = { date }
                         onChange = {
-                            (e) => setDate(e.target.value)
-                        }
-                        /> <
-                        input type = "time"
-                        value = { time }
-                        onChange = {
-                            (e) => setTime(e.target.value)
-                        }
+                            (e) => setDate(e.target.value) }
                         />
 
                         <
-                        button onClick = { schedulePost } > Schedule < /button> < /
-                        div >
+                        input type = "time"
+                        value = { time }
+                        onChange = {
+                            (e) => setTime(e.target.value) }
+                        />
+
+                        <
+                        button onClick = { schedulePost } > Schedule < /button> <
+                        /div>
                     )
                 } <
                 /section>
@@ -299,15 +297,15 @@ function App() {
                         className = "result-card" >
                         <
                         p > { post.result } < /p> <
-                        small > Topic: { post.topic } < /small> < /
-                        div >
+                        small > Topic: { post.topic } < /small> <
+                        /div>
                     ))
                 } <
                 /section>
             )
         }
 
-        { /*  NEW: SCHEDULED POSTS */ } {
+        { /* SCHEDULED POSTS */ } {
             isLoggedIn && ( <
                 section >
                 <
@@ -320,8 +318,8 @@ function App() {
                         <
                         p > { post.content } < /p> <
                         small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
-                        /small> < /
-                        div >
+                        /small> <
+                        /div>
                     ))
                 } <
                 /section>
@@ -342,74 +340,20 @@ function App() {
                 button > 📸Instagram < /button> <
                 button > 💼LinkedIn < /button> <
                 button > ▶️YouTube < /button> <
-                button > 📘Facebook < /button> < /
-                div >
+                button > 📘Facebook < /button> <
+                /div>
 
                 <
                 button onClick = {
-                    () => setShowModal(false)
-                } > Close < /button> < /
-                div > <
+                    () => setShowModal(false) } > Close < /button> <
+                /div> <
                 /div>
             )
-        } <
+        }
+
+        <
         /div>
     );
-}
-
-export default App;
-ction >
-)
-}
-
-{ /*  NEW: SCHEDULED POSTS */ } {
-    isLoggedIn && ( <
-        section >
-        <
-        h2 > ⏳Scheduled Posts < /h2>
-
-        {
-            scheduledData.map((post, index) => ( <
-                div key = { index }
-                className = "result-card" >
-                <
-                p > { post.content } < /p> <
-                small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
-                /small> < /
-                div >
-            ))
-        } <
-        /section>
-    )
-}
-
-{ /* MODAL */ } {
-    showModal && ( <
-        div className = "modal" >
-        <
-        div className = "modal-content" >
-        <
-        h2 > Connect Your Accounts < /h2>
-
-        <
-        div className = "icons" >
-        <
-        button > 📸Instagram < /button> <
-        button > 💼LinkedIn < /button> <
-        button > ▶️YouTube < /button> <
-        button > 📘Facebook < /button> < /
-        div >
-
-        <
-        button onClick = {
-            () => setShowModal(false)
-        } > Close < /button> < /
-        div > <
-        /div>
-    )
-} <
-/div>
-);
 }
 
 export default App;
