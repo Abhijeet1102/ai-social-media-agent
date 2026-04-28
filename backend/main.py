@@ -185,7 +185,7 @@ def test_db():
     posts_collection.insert_one({"test": "working"})
     return {"msg": "inserted"}
 
-    @app.get("/reset-users")
+@app.get("/reset-users")
 def reset_users():
     users_collection.delete_many({})
     return {"msg": "All users deleted"}
