@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-const BASE_URL = process.env.REACT_APP_API_URL;
+const BASE_URL = process.env.REACT_APP_API_URL ? .replace(/\/$/, "");
+
 
 function App() {
     const [topic, setTopic] = useState("");
@@ -158,6 +159,7 @@ function App() {
         fetchScheduled();
     };
 
+
     return ( <
         div className = "app" >
 
@@ -169,7 +171,8 @@ function App() {
 
         <
         button onClick = {
-            () => setShowModal(true) } >
+            () => setShowModal(true)
+        } >
         Connect Accounts <
         /button>
 
@@ -177,7 +180,8 @@ function App() {
             isLoggedIn && ( <
                 button onClick = { handleLogout }
                 style = {
-                    { marginLeft: "10px" } } >
+                    { marginLeft: "10px" }
+                } >
                 Logout <
                 /button>
             )
@@ -187,7 +191,8 @@ function App() {
         { /* LOGIN / SIGNUP */ } {
             !isLoggedIn && ( <
                 div style = {
-                    { textAlign: "center", marginTop: "20px" } } >
+                    { textAlign: "center", marginTop: "20px" }
+                } >
                 <
                 h3 > { isSignup ? "Signup" : "Login" } < /h3>
 
@@ -195,7 +200,8 @@ function App() {
                 input placeholder = "Username"
                 value = { username }
                 onChange = {
-                    (e) => setUsername(e.target.value) }
+                    (e) => setUsername(e.target.value)
+                }
                 />
 
                 <
@@ -206,7 +212,8 @@ function App() {
                 placeholder = "Password"
                 value = { password }
                 onChange = {
-                    (e) => setPassword(e.target.value) }
+                    (e) => setPassword(e.target.value)
+                }
                 />
 
                 <
@@ -222,16 +229,16 @@ function App() {
 
                 <
                 p style = {
-                    { cursor: "pointer", color: "blue", marginTop: "10px" } }
+                    { cursor: "pointer", color: "blue", marginTop: "10px" }
+                }
                 onClick = {
-                    () => setIsSignup(!isSignup) } >
-                {
+                    () => setIsSignup(!isSignup)
+                } > {
                     isSignup ?
-                    "Already have account? Login" :
-                        "New user? Signup"
+                    "Already have account? Login" : "New user? Signup"
                 } <
-                /p> <
-                /div>
+                /p> < /
+                div >
             )
         }
 
@@ -246,7 +253,8 @@ function App() {
                 placeholder = "Enter topic..."
                 value = { topic }
                 onChange = {
-                    (e) => setTopic(e.target.value) }
+                    (e) => setTopic(e.target.value)
+                }
                 />
 
                 <
@@ -266,19 +274,21 @@ function App() {
                         input type = "date"
                         value = { date }
                         onChange = {
-                            (e) => setDate(e.target.value) }
+                            (e) => setDate(e.target.value)
+                        }
                         />
 
                         <
                         input type = "time"
                         value = { time }
                         onChange = {
-                            (e) => setTime(e.target.value) }
+                            (e) => setTime(e.target.value)
+                        }
                         />
 
                         <
-                        button onClick = { schedulePost } > Schedule < /button> <
-                        /div>
+                        button onClick = { schedulePost } > Schedule < /button> < /
+                        div >
                     )
                 } <
                 /section>
@@ -297,8 +307,8 @@ function App() {
                         className = "result-card" >
                         <
                         p > { post.result } < /p> <
-                        small > Topic: { post.topic } < /small> <
-                        /div>
+                        small > Topic: { post.topic } < /small> < /
+                        div >
                     ))
                 } <
                 /section>
@@ -318,8 +328,8 @@ function App() {
                         <
                         p > { post.content } < /p> <
                         small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
-                        /small> <
-                        /div>
+                        /small> < /
+                        div >
                     ))
                 } <
                 /section>
@@ -340,13 +350,14 @@ function App() {
                 button > 📸Instagram < /button> <
                 button > 💼LinkedIn < /button> <
                 button > ▶️YouTube < /button> <
-                button > 📘Facebook < /button> <
-                /div>
+                button > 📘Facebook < /button> < /
+                div >
 
                 <
                 button onClick = {
-                    () => setShowModal(false) } > Close < /button> <
-                /div> <
+                    () => setShowModal(false)
+                } > Close < /button> < /
+                div > <
                 /div>
             )
         }
@@ -356,4 +367,5 @@ function App() {
     );
 }
 
+export default App;
 export default App;
