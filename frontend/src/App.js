@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-const BASE_URL = process.env.REACT_APP_API_URL ? .replace(/\/$/, "");
-
+const BASE_URL = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
 
 function App() {
     const [topic, setTopic] = useState("");
@@ -367,5 +366,4 @@ function App() {
     );
 }
 
-export default App;
 export default App;
