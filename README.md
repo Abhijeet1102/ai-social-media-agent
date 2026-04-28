@@ -81,6 +81,11 @@ http://127.0.0.1:8000
 
 ---
 
+## 🌐 Live Demo
+
+👉 https://ai-social-media-agent-x6ji.onrender.com
+
+---
 ##  API Usage
 
 ### POST `/generate/`
