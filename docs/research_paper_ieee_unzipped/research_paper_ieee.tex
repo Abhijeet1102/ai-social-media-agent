@@ -1,0 +1,256 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, shapes.misc}
+
+\title{AI-Enabled Social Media Content Generation and Scheduling: An IEEE-Style Research Paper}
+
+\author{
+\IEEEauthorblockN{Abhi}
+\IEEEauthorblockA{
+Department of Computer Science and Engineering\\
+Project: AI Social Media Automation Agent
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Social media teams increasingly require rapid, personalized, and consistent content production across multiple platforms. This paper presents an AI-enabled social media automation agent that combines large language model based caption generation, authenticated user management, persistent post history, and time-based scheduling. The prototype uses a React frontend, FastAPI backend, MongoDB Atlas database, JSON Web Token authentication, OpenAI GPT-4o-mini generation, and a Python worker that monitors pending posts and updates execution status. The system demonstrates how generative AI can reduce ideation effort while retaining human control over topic selection and scheduling. An architectural analysis is provided with component, data, and workflow diagrams, along with implementation tables describing endpoints and storage collections. Recent literature from Springer Nature and Nature journals is used to position the project within research on generative AI marketing, personalization, creativity, misinformation, and sustainability. Results show a practical foundation for small-business content assistance with clear directions for security hardening overall.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Generative AI, social media automation, FastAPI, React, MongoDB, large language models, content scheduling, digital marketing.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Generative artificial intelligence is changing digital marketing by enabling automatic production of text, image, and video assets, but practical systems must still support authentication, persistence, scheduling, and human review. Recent marketing research argues that GenAI can improve content productivity while requiring careful attention to input quality, human augmentation, brand risk, and hallucination control \cite{grewal2025,cillo2025}. Social media is a particularly relevant domain because captions, hashtags, and campaign messages are frequent, short-form, context-sensitive artifacts that benefit from iteration and experimentation across audiences and platforms.
+
+This project implements an AI social media automation agent that allows a user to sign up, log in, generate an Instagram-style caption with hashtags from a topic, view previous generations, and schedule generated content for later posting. The system is composed of a React single-page interface, a FastAPI service, MongoDB Atlas collections, OpenAI GPT-4o-mini, bcrypt password hashing, JWT bearer authentication, and a polling worker. The worker checks scheduled posts every ten seconds, marks due posts as posted, and records success or failure events.
+
+The research contribution of this paper is a system-level description of a lightweight, full-stack GenAI application for social media content assistance. Unlike purely conceptual discussions of AI marketing tools, this work maps current literature to a running project architecture and identifies engineering constraints such as token security, platform integration, retry handling, and audit logging. The paper also treats the prototype as an educational artifact, showing how modern AI services can be combined with ordinary web engineering patterns to create an extensible, inspectable automation pipeline for reuse.
+
+\section{Literature Review}
+
+Generative AI has become a central topic in marketing research. Grewal et al. describe how GenAI influences customer communication, service, sales, and content creation, while emphasizing human augmentation and risk management \cite{grewal2025}. Cillo and Rubera frame GenAI as a source of research opportunities across innovation and marketing processes \cite{cillo2025}. Krugmann and Hartmann show that LLMs are changing sentiment analysis in marketing research, which is relevant for future extensions that evaluate generated captions before publication \cite{krugmann2024}.
+
+Personalization is also critical for social media systems. Chen et al. argue that LLMs can transform personalization by enabling active, conversational user engagement rather than only passive filtering \cite{chen2024}. This supports future enhancement of the project from single-topic caption generation to user-specific tone, platform, and campaign adaptation. Broader LLM surveys identify technical frameworks and challenges such as prompt design, evaluation, and reliability \cite{kumar2024llm}.
+
+Creativity studies provide evidence that LLMs can perform strongly on divergent thinking tasks \cite{hubert2024}, while human-AI co-creation studies show that interface design and user self-efficacy affect creative outcomes \cite{mcguire2024}. These findings support a human-in-the-loop design in which AI drafts content but users decide whether and when to schedule it. Social judgment research further indicates that advanced LLMs can produce socially appropriate responses in some settings \cite{mittelstadt2024}, though this does not remove the need for review.
+
+The project also sits in a risk-sensitive domain. Misinformation can spread quickly in digital networks \cite{govindankutty2024}, political and social use of LLMs can affect public discourse \cite{kudina2025}, and LLM deployment has environmental costs that should shape system design \cite{ren2024}. Emoji and personality analysis research shows the value of social-media-specific signals \cite{kumar2024emoji}. Recent work on LLM-assisted social media coding demonstrates that GPT-4o can approach human reliability in selected qualitative coding workflows \cite{burgess2026}, suggesting future analytics modules for post classification and campaign insight.
+
+\section{Proposed System}
+
+The proposed system is a web-based AI assistant for generating and scheduling social media content. A user authenticates through the frontend, receives a JWT token from the backend, submits a content topic, and receives an AI-generated caption and hashtags. Generated content is saved with the username and timestamp. The user can then choose a date and time for publication. The scheduler stores the selected content as a pending item, and a worker process periodically checks whether any scheduled item is due.
+
+The current implementation simulates the posting stage by marking due items as posted. This is a useful prototype boundary because real posting requires each social platform's OAuth flow, API permissions, content policy handling, and rate-limit management. The design therefore separates content generation, content storage, scheduling, and posting execution so that real platform adapters can be added later without rewriting the user-facing workflow.
+
+\subsection{System Architecture}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.72cm and 0.65cm,
+    every node/.style={font=\scriptsize},
+    box/.style={draw, rounded corners, align=center, minimum width=1.85cm, minimum height=0.65cm},
+    db/.style={draw, cylinder, shape border rotate=90, aspect=0.25, align=center, minimum height=0.8cm, minimum width=1.6cm},
+    arrow/.style={-{Latex[length=2mm]}, thick}
+]
+\node[box] (user) {User};
+\node[box, right=of user] (react) {React\\Frontend};
+\node[box, right=of react] (api) {FastAPI\\Backend};
+\node[box, above right=of api] (llm) {OpenAI\\GPT-4o-mini};
+\node[db, below right=of api] (mongo) {MongoDB\\Atlas};
+\node[box, below=of mongo] (worker) {Python\\Scheduler};
+\node[db, right=of worker] (logs) {Logs\\Collection};
+
+\draw[arrow] (user) -- (react);
+\draw[arrow] (react) -- node[above, align=center] {auth/generate\\schedule} (api);
+\draw[arrow] (api) -- node[above right] {prompt} (llm);
+\draw[arrow] (llm) -- (api);
+\draw[arrow] (api) -- (mongo);
+\draw[arrow] (mongo) -- (worker);
+\draw[arrow] (worker) -- (mongo);
+\draw[arrow] (worker) -- (logs);
+\draw[arrow] (api) to[bend right=18] (react);
+\end{tikzpicture}
+\caption{High-level architecture of the AI social media automation agent.}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Main Workflow}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    every node/.style={font=\tiny},
+    actor/.style={draw, rounded corners, align=center, minimum width=0.85cm},
+    msg/.style={-{Latex[length=1.4mm]}, thin}
+]
+\node[actor] (u) at (0,0) {User};
+\node[actor] (r) at (1.25,0) {React};
+\node[actor] (f) at (2.55,0) {FastAPI};
+\node[actor] (o) at (3.95,0) {OpenAI};
+\node[actor] (m) at (5.25,0) {MongoDB};
+\node[actor] (w) at (6.65,0) {Worker};
+
+\foreach \x in {u,r,f,o,m,w} \draw[dashed] (\x.south) -- ++(0,-5.25);
+
+\draw[msg] (0,-0.55) -- node[above] {topic} (1.25,-0.55);
+\draw[msg] (1.25,-1.05) -- node[above] {/generate + JWT} (2.55,-1.05);
+\draw[msg] (2.55,-1.55) -- node[above] {caption prompt} (3.95,-1.55);
+\draw[msg] (3.95,-2.05) -- node[above] {generated text} (2.55,-2.05);
+\draw[msg] (2.55,-2.55) -- node[above] {save post} (5.25,-2.55);
+\draw[msg] (2.55,-3.05) -- node[above] {result} (1.25,-3.05);
+\draw[msg] (0,-3.55) -- node[above] {date/time} (1.25,-3.55);
+\draw[msg] (1.25,-4.05) -- node[above] {/schedule} (2.55,-4.05);
+\draw[msg] (2.55,-4.55) -- node[above] {pending post} (5.25,-4.55);
+\draw[msg] (6.65,-5.05) -- node[above] {poll/update status} (5.25,-5.05);
+\end{tikzpicture}
+\caption{Sequence of generation, scheduling, and status update operations.}
+\label{fig:workflow}
+\end{figure}
+
+\section{Implementation Details}
+
+The backend is implemented in Python using FastAPI. It defines endpoints for signup, login, content generation, post history retrieval, scheduling, scheduled post retrieval, and database testing. Passwords are hashed with bcrypt through Passlib, and authenticated endpoints use OAuth2 bearer tokens encoded as JWT. The frontend is implemented in React and stores the token in browser local storage. MongoDB Atlas is used for persistent storage.
+
+\begin{table}[!t]
+\caption{Backend API Summary}
+\label{tab:api}
+\centering
+\scriptsize
+\begin{tabular}{llll}
+\toprule
+Endpoint & Method & Protection & Purpose\\
+\midrule
+\texttt{/signup} & POST & No & Create user\\
+\texttt{/login} & POST & No & Return JWT token\\
+\texttt{/generate} & GET & Yes & Generate caption\\
+\texttt{/posts} & GET & Yes & Fetch generated posts\\
+\texttt{/schedule} & POST & Yes & Store scheduled content\\
+\texttt{/scheduled} & GET & Yes & Fetch scheduled posts\\
+\texttt{/testdb} & GET & No & Insert test document\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Database Collections}
+\label{tab:collections}
+\centering
+\scriptsize
+\begin{tabular}{lll}
+\toprule
+Collection & Main Fields & Role\\
+\midrule
+\texttt{users} & username, password & Credentials\\
+\texttt{posts} & topic, result, user, created\_at & Generated content\\
+\texttt{scheduled\_posts} & content, date, time, status & Scheduled content\\
+\texttt{logs} & action, content/error, time & Worker events\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+
+The prototype demonstrates the feasibility of a compact full-stack GenAI workflow for social media assistance. The most important design choice is keeping the user in control of both the prompt topic and the schedule. This aligns with research recommending human augmentation for GenAI marketing outputs \cite{grewal2025}. The project also provides a natural foundation for sentiment-aware moderation, because generated captions could be evaluated against brand tone, toxicity, misinformation risk, or audience sentiment before scheduling \cite{krugmann2024,govindankutty2024}.
+
+The system is intentionally modular. FastAPI manages business logic and authentication, React manages interaction, MongoDB stores user and post data, and the worker handles asynchronous scheduling. This separation allows future replacement of the simulated posting stage with adapters for Instagram, LinkedIn, YouTube, and Facebook. It also allows queue-based scheduling to replace polling when scale increases.
+
+Several engineering limitations should be addressed before production use. The current backend uses permissive CORS, a hardcoded secret key, and a database URI in source code. These should be moved to environment variables, restricted by deployment environment, and rotated before public hosting. The worker also interprets scheduled times as UTC, while the frontend collects local date and time without explicit timezone conversion. Production scheduling should store timezone-aware timestamps and use an idempotent job queue to avoid duplicate posting.
+
+\section{Evaluation Plan}
+
+Because the current repository is a functional prototype, evaluation should combine software testing and content-quality assessment. Unit tests should verify authentication, protected endpoint behavior, post ownership isolation, schedule creation, and worker status transitions. Integration tests should simulate a full user journey from signup to scheduled post completion. Content evaluation can use expert review or rubric-based scoring for relevance, originality, brand safety, and hashtag usefulness. Future experiments can compare AI-assisted caption creation with manual writing time and perceived quality, following human-AI co-creation research \cite{mcguire2024}.
+
+\begin{table}[!t]
+\caption{Suggested Evaluation Metrics}
+\label{tab:metrics}
+\centering
+\scriptsize
+\begin{tabular}{lll}
+\toprule
+Category & Metric & Measurement Method\\
+\midrule
+Generation quality & Relevance/originality & Human rubric\\
+Safety & Toxicity/misinformation & Moderation audit\\
+Reliability & Endpoint success rate & API tests/logs\\
+Scheduling accuracy & Due vs. posted time & Worker logs\\
+Usability & Completion time & User study\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Future Work}
+
+Future work should integrate official platform APIs using OAuth-based account linking, replace polling with a queue scheduler, and introduce pre-publication moderation. Personalization can be improved by storing user brand preferences, target audience, posting platform, tone, and prior engagement outcomes. A retrieval-augmented generation module could ground captions in product catalogs or campaign briefs. Analytics could classify past posts, detect audience sentiment, and recommend posting times. Security work should include environment-based secrets, stricter CORS, refresh tokens, input validation, rate limiting, and encrypted storage for platform credentials.
+
+\section{Conclusion}
+
+This paper presented an IEEE-style study of an AI social media automation agent that combines generative AI, web authentication, persistent storage, and scheduled execution. The prototype shows that a small full-stack system can provide practical value by converting a user topic into a caption and hashtags, saving the result, and scheduling publication through a worker-driven workflow. Its modular design separates frontend interaction, backend orchestration, database persistence, LLM generation, and scheduling logic, making it suitable for incremental extension.
+
+The literature indicates that GenAI can support marketing productivity, personalization, creativity, sentiment analysis, and social media research, but it also introduces risks around misinformation, hallucination, platform governance, and sustainability. For this reason, the most defensible design is not fully autonomous posting, but assisted creation with review, logging, moderation, and user-controlled scheduling. The present implementation already reflects part of this approach by requiring the user to initiate generation and scheduling.
+
+Before deployment, the system should be hardened through secure secret management, restricted CORS, timezone-safe scheduling, real platform API integration, better error handling, and systematic testing. Future development can add brand memory, analytics, sentiment scoring, and policy-aware moderation. Overall, the project offers a strong prototype for AI-assisted social media management and a clear pathway toward a trustworthy production-grade automation platform. Its main research value is practical integration: it demonstrates how current LLM capabilities can be embedded inside a maintainable application while leaving space for governance, measurement, and responsible human decision-making across future academic, startup, and small-business deployment contexts in realistic operating environments and market conditions.
+
+\begin{thebibliography}{15}
+
+\bibitem{grewal2025}
+D. Grewal, C. B. Satornino, T. Davenport, and A. Guha, ``How generative AI is shaping the future of marketing,'' \emph{Journal of the Academy of Marketing Science}, vol. 53, pp. 702--722, 2025, doi: 10.1007/s11747-024-01064-3.
+
+\bibitem{cillo2025}
+P. Cillo and G. Rubera, ``Generative AI in innovation and marketing processes: A roadmap of research opportunities,'' \emph{Journal of the Academy of Marketing Science}, vol. 53, pp. 684--701, 2025, doi: 10.1007/s11747-024-01044-7.
+
+\bibitem{krugmann2024}
+J. O. Krugmann and J. Hartmann, ``Sentiment Analysis in the Age of Generative AI,'' \emph{Customer Needs and Solutions}, vol. 11, art. no. 3, 2024, doi: 10.1007/s40547-024-00143-4.
+
+\bibitem{chen2024}
+J. Chen \emph{et al.}, ``When large language models meet personalization: perspectives of challenges and opportunities,'' \emph{World Wide Web}, vol. 27, art. no. 42, 2024, doi: 10.1007/s11280-024-01276-1.
+
+\bibitem{kumar2024llm}
+P. Kumar, ``Large language models (LLMs): survey, technical frameworks, and future challenges,'' \emph{Artificial Intelligence Review}, vol. 57, art. no. 260, 2024, doi: 10.1007/s10462-024-10888-y.
+
+\bibitem{hubert2024}
+K. F. Hubert, K. N. Awa, and D. L. Zabelina, ``The current state of artificial intelligence generative language models is more creative than humans on divergent thinking tasks,'' \emph{Scientific Reports}, vol. 14, art. no. 3440, 2024, doi: 10.1038/s41598-024-53303-w.
+
+\bibitem{mcguire2024}
+J. McGuire, D. De Cremer, and T. Van de Cruys, ``Establishing the importance of co-creation and self-efficacy in creative collaboration with artificial intelligence,'' \emph{Scientific Reports}, vol. 14, art. no. 18525, 2024, doi: 10.1038/s41598-024-69423-2.
+
+\bibitem{mittelstadt2024}
+J. M. Mittelstadt, J. Maier, P. Goerke, F. Zinn, and M. Hermes, ``Large language models can outperform humans in social situational judgments,'' \emph{Scientific Reports}, vol. 14, art. no. 27449, 2024, doi: 10.1038/s41598-024-79048-0.
+
+\bibitem{govindankutty2024}
+S. Govindankutty and S. P. Gopalan, ``Epidemic modeling for misinformation spread in digital networks through a social intelligence approach,'' \emph{Scientific Reports}, vol. 14, art. no. 19100, 2024, doi: 10.1038/s41598-024-69657-0.
+
+\bibitem{ren2024}
+S. Ren \emph{et al.}, ``Reconciling the contrasting narratives on the environmental impact of large language models,'' \emph{Scientific Reports}, vol. 14, art. no. 26310, 2024, doi: 10.1038/s41598-024-76682-6.
+
+\bibitem{kumar2024emoji}
+A. Kumar and D. Jain, ``EmoMBTI-Net: introducing and leveraging a novel emoji dataset for personality profiling with large language models,'' \emph{Social Network Analysis and Mining}, vol. 14, art. no. 234, 2024, doi: 10.1007/s13278-024-01400-z.
+
+\bibitem{franceschelli2025}
+G. Franceschelli and M. Musolesi, ``On the creativity of large language models,'' \emph{AI \& Society}, vol. 40, pp. 3785--3795, 2025, doi: 10.1007/s00146-024-02127-3.
+
+\bibitem{kudina2025}
+O. Kudina and B. de Boer, ``Large language models, politics, and the functionalization of language,'' \emph{AI and Ethics}, vol. 5, pp. 2367--2379, 2025, doi: 10.1007/s43681-024-00564-w.
+
+\bibitem{ding2024}
+M. Ding, S. Dong, and R. Grewal, ``Generative AI and Usage in Marketing Classroom,'' \emph{Customer Needs and Solutions}, vol. 11, art. no. 5, 2024, doi: 10.1007/s40547-024-00145-2.
+
+\bibitem{burgess2026}
+R. Burgess, K. Waters, E. Spray, and E. Prieto-Rodriguez, ``Using large language models to complement humans for the coding of social media interactions between science teachers,'' \emph{Discover Education}, vol. 5, art. no. 81, 2026, doi: 10.1007/s44217-025-00868-x.
+
+\end{thebibliography}
+
+\end{document}

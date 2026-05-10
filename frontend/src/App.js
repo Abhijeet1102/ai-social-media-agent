@@ -1,369 +1,396 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { authHeaders, BASE_URL, formBody, getToken } from "./api";
+import AuthPanel from "./components/AuthPanel";
+import ConnectModal from "./components/ConnectModal";
+import CustomerSupport from "./components/CustomerSupport";
+import Dashboard from "./components/Dashboard";
+import Generator from "./components/Generator";
+import RecentPosts from "./components/RecentPosts";
 import "./App.css";
 
-const BASE_URL = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
-
 function App() {
-    const [topic, setTopic] = useState("");
-    const [result, setResult] = useState("");
-    const [showModal, setShowModal] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [result, setResult] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
 
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
 
-    // AUTH
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isSignup, setIsSignup] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [scheduledData, setScheduledData] = useState([]);
+  const [connectedAccounts, setConnectedAccounts] = useState([]);
 
-    // DATA
-    const [posts, setPosts] = useState([]);
-    const [scheduledData, setScheduledData] = useState([]);
+  const fetchScheduled = useCallback(async () => {
+    const res = await fetch(`${BASE_URL}/scheduled`, {
+      headers: authHeaders(),
+    });
 
-    // AUTO LOGIN
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) setIsLoggedIn(true);
-    }, []);
+    if (res.ok) setScheduledData(await res.json());
+  }, []);
 
-    useEffect(() => {
-        if (isLoggedIn) {
-            fetchPosts();
-            fetchScheduled();
-        }
-    }, [isLoggedIn]);
+  const fetchConnectedAccounts = useCallback(async () => {
+    const res = await fetch(`${BASE_URL}/connected-accounts`, {
+      headers: authHeaders(),
+    });
 
-    // FETCH POSTS
-    const fetchPosts = async() => {
-        const token = localStorage.getItem("token");
+    if (res.ok) setConnectedAccounts(await res.json());
+  }, []);
 
-        const res = await fetch(`${BASE_URL}/posts`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+  useEffect(() => {
+    const token = getToken();
+    if (token) setIsLoggedIn(true);
 
-        const data = await res.json();
-        setPosts(data);
-    };
+    const params = new URLSearchParams(window.location.search);
+    const connectStatus = params.get("status");
+    const connectMessage = params.get("message");
 
-    // FETCH SCHEDULED
-    const fetchScheduled = async() => {
-        const token = localStorage.getItem("token");
+    if (params.get("connect") === "linkedin" && connectStatus) {
+      alert(connectMessage || `LinkedIn ${connectStatus}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-        const res = await fetch(`${BASE_URL}/scheduled`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    if (params.get("connect") === "youtube" && connectStatus) {
+      alert(connectMessage || `YouTube ${connectStatus}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-        const data = await res.json();
-        setScheduledData(data);
-    };
+    if (params.get("connect") === "instagram" && connectStatus) {
+      alert(connectMessage || `Instagram ${connectStatus}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-    // LOGIN
-    const handleLogin = async() => {
-        const res = await fetch(`${BASE_URL}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `username=${username}&password=${password}`,
-        });
+    if (params.get("connect") === "facebook" && connectStatus) {
+      alert(connectMessage || `Facebook ${connectStatus}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
-        const data = await res.json();
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchScheduled();
+      fetchConnectedAccounts();
+    }
+  }, [isLoggedIn, fetchScheduled, fetchConnectedAccounts]);
 
-        if (data.access_token) {
-            localStorage.setItem("token", data.access_token);
-            setIsLoggedIn(true);
-            alert("Login Successful 🚀");
-        } else {
-            alert(data.detail || "Login Failed");
-        }
-    };
+  const handleLogin = async () => {
+    const res = await fetch(`${BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formBody({ username, password }),
+    });
 
-    // SIGNUP
-    const handleSignup = async() => {
-        const res = await fetch(`${BASE_URL}/signup`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `username=${username}&password=${password}`,
-        });
+    const data = await res.json();
 
-        const data = await res.json();
+    if (data.access_token) {
+      localStorage.setItem("token", data.access_token);
+      setIsLoggedIn(true);
+      alert("Login Successful");
+    } else {
+      alert(data.detail || "Login Failed");
+    }
+  };
 
-        alert(data.msg || data.detail);
+  const handleSignup = async () => {
+    const res = await fetch(`${BASE_URL}/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formBody({ username, password }),
+    });
 
-        if (data.msg) setIsSignup(false);
-    };
+    const data = await res.json();
+    alert(data.msg || data.detail || "Signup Failed");
 
-    // LOGOUT
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-        setPosts([]);
-        setScheduledData([]);
-        setResult("");
-    };
+    if (data.msg) setIsSignup(false);
+  };
 
-    // GENERATE
-    const generateContent = async() => {
-        const token = localStorage.getItem("token");
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setPosts([]);
+    setScheduledData([]);
+    setConnectedAccounts([]);
+    setResult("");
+  };
 
-        const res = await fetch(
-            `${BASE_URL}/generate?topic=${topic}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+  const handleAuthError = (data) => {
+    if (data.detail === "Invalid token") {
+      localStorage.removeItem("token");
+      setIsLoggedIn(false);
+      setConnectedAccounts([]);
+      alert("Session expired. Please login again.");
+      return true;
+    }
 
-        const data = await res.json();
-        setResult(data.result);
+    return false;
+  };
 
-        fetchPosts();
-    };
+  const generateContent = async () => {
+    const res = await fetch(`${BASE_URL}/generate?topic=${encodeURIComponent(topic)}`, {
+      headers: authHeaders(),
+    });
 
-    // SCHEDULE
-    const schedulePost = async() => {
-        const token = localStorage.getItem("token");
+    const data = await res.json();
+    setResult(data.result);
+  };
 
-        if (!result || !date || !time) {
-            alert("Fill all fields!");
-            return;
-        }
+  const schedulePost = async () => {
+    if (!result || !date || !time) {
+      alert("Fill all fields!");
+      return;
+    }
 
-        const res = await fetch(`${BASE_URL}/schedule`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                content: result,
-                date,
-                time,
-            }),
-        });
+    const res = await fetch(`${BASE_URL}/schedule`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({
+        content: result,
+        date,
+        time,
+        platforms: ["linkedin"],
+      }),
+    });
 
-        const data = await res.json();
-        alert(data.msg);
+    const data = await res.json();
+    alert(data.msg || data.detail || "Post schedule failed");
 
-        setDate("");
-        setTime("");
+    if (res.ok) {
+      setDate("");
+      setTime("");
+      setResult("");
+      setTopic("");
+      setPosts([]);
+      fetchScheduled();
+    }
+  };
 
-        fetchScheduled();
-    };
+  const postNowLinkedIn = async () => {
+    if (!result) {
+      alert("Generate content first");
+      return;
+    }
 
+    const res = await fetch(`${BASE_URL}/post-now/linkedin`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({
+        content: result,
+      }),
+    });
 
-    return ( <
-        div className = "app" >
+    const data = await res.json();
+    alert(data.msg || data.detail || "Post failed");
 
-        { /* HERO */ } <
-        header className = "hero" >
-        <
-        h1 > AI Social Media Automation < /h1> <
-        p > Create, Schedule & Grow with AI < /p>
+    if (res.ok) {
+      setResult("");
+      setTopic("");
+      setPosts([]);
+      fetchScheduled();
+    }
+  };
 
-        <
-        button onClick = {
-            () => setShowModal(true)
-        } >
-        Connect Accounts <
-        /button>
+  const connectLinkedIn = async () => {
+    if (!isLoggedIn) {
+      alert("Please login first");
+      return;
+    }
 
-        {
-            isLoggedIn && ( <
-                button onClick = { handleLogout }
-                style = {
-                    { marginLeft: "10px" }
-                } >
-                Logout <
-                /button>
-            )
-        } <
-        /header>
+    const res = await fetch(`${BASE_URL}/auth/linkedin/start`, {
+      headers: authHeaders(),
+    });
+    const data = await res.json();
 
-        { /* LOGIN / SIGNUP */ } {
-            !isLoggedIn && ( <
-                div style = {
-                    { textAlign: "center", marginTop: "20px" }
-                } >
-                <
-                h3 > { isSignup ? "Signup" : "Login" } < /h3>
+    if (handleAuthError(data)) return;
 
-                <
-                input placeholder = "Username"
-                value = { username }
-                onChange = {
-                    (e) => setUsername(e.target.value)
-                }
-                />
+    if (!res.ok) {
+      alert(data.detail || "LinkedIn connect failed");
+      return;
+    }
 
-                <
-                br / > < br / >
+    window.location.href = data.url;
+  };
 
-                <
-                input type = "password"
-                placeholder = "Password"
-                value = { password }
-                onChange = {
-                    (e) => setPassword(e.target.value)
-                }
-                />
+  const connectInstagram = async () => {
+    if (!isLoggedIn) {
+      alert("Please login first");
+      return;
+    }
 
-                <
-                br / > < br / >
+    const res = await fetch(`${BASE_URL}/auth/instagram/start`, {
+      headers: authHeaders(),
+    });
+    const data = await res.json();
 
-                {
-                    isSignup ? ( <
-                        button onClick = { handleSignup } > Signup < /button>
-                    ) : ( <
-                        button onClick = { handleLogin } > Login < /button>
-                    )
-                }
+    if (handleAuthError(data)) return;
 
-                <
-                p style = {
-                    { cursor: "pointer", color: "blue", marginTop: "10px" }
-                }
-                onClick = {
-                    () => setIsSignup(!isSignup)
-                } > {
-                    isSignup ?
-                    "Already have account? Login" : "New user? Signup"
-                } <
-                /p> < /
-                div >
-            )
-        }
+    if (!res.ok) {
+      alert(data.detail || "Instagram connect failed");
+      return;
+    }
 
-        { /* GENERATE */ } {
-            isLoggedIn && ( <
-                section className = "generator" >
-                <
-                h2 > Generate Content < /h2>
+    window.location.href = data.url;
+  };
 
-                <
-                input type = "text"
-                placeholder = "Enter topic..."
-                value = { topic }
-                onChange = {
-                    (e) => setTopic(e.target.value)
-                }
-                />
+  const disconnectInstagram = async () => {
+    const res = await fetch(`${BASE_URL}/connected-accounts/instagram`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    const data = await res.json();
+    alert(data.msg || data.detail || "Instagram disconnected");
+    fetchConnectedAccounts();
+  };
 
-                <
-                button onClick = { generateContent } > Generate < /button>
+  const connectFacebook = async () => {
+    if (!isLoggedIn) {
+      alert("Please login first");
+      return;
+    }
 
-                {
-                    result && ( <
-                        div className = "result-card" >
-                        <
-                        h3 > Generated Content < /h3> <
-                        p > { result } < /p>
+    const res = await fetch(`${BASE_URL}/auth/facebook/start`, {
+      headers: authHeaders(),
+    });
+    const data = await res.json();
 
-                        <
-                        h4 > Schedule Post < /h4>
+    if (handleAuthError(data)) return;
 
-                        <
-                        input type = "date"
-                        value = { date }
-                        onChange = {
-                            (e) => setDate(e.target.value)
-                        }
-                        />
+    if (!res.ok) {
+      alert(data.detail || "Facebook connect failed");
+      return;
+    }
 
-                        <
-                        input type = "time"
-                        value = { time }
-                        onChange = {
-                            (e) => setTime(e.target.value)
-                        }
-                        />
+    window.location.href = data.url;
+  };
 
-                        <
-                        button onClick = { schedulePost } > Schedule < /button> < /
-                        div >
-                    )
-                } <
-                /section>
-            )
-        }
+  const disconnectFacebook = async () => {
+    const res = await fetch(`${BASE_URL}/connected-accounts/facebook`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    const data = await res.json();
+    alert(data.msg || data.detail || "Facebook disconnected");
+    fetchConnectedAccounts();
+  };
 
-        { /* DASHBOARD */ } {
-            isLoggedIn && ( <
-                section >
-                <
-                h2 > Dashboard < /h2>
+  const disconnectLinkedIn = async () => {
+    const res = await fetch(`${BASE_URL}/connected-accounts/linkedin`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    const data = await res.json();
+    alert(data.msg || data.detail || "LinkedIn disconnected");
+    fetchConnectedAccounts();
+  };
 
-                {
-                    posts.map((post, index) => ( <
-                        div key = { index }
-                        className = "result-card" >
-                        <
-                        p > { post.result } < /p> <
-                        small > Topic: { post.topic } < /small> < /
-                        div >
-                    ))
-                } <
-                /section>
-            )
-        }
+  const connectYouTube = async () => {
+    if (!isLoggedIn) {
+      alert("Please login first");
+      return;
+    }
 
-        { /* SCHEDULED POSTS */ } {
-            isLoggedIn && ( <
-                section >
-                <
-                h2 > ⏳Scheduled Posts < /h2>
+    const res = await fetch(`${BASE_URL}/auth/youtube/start`, {
+      headers: authHeaders(),
+    });
+    const data = await res.json();
 
-                {
-                    scheduledData.map((post, index) => ( <
-                        div key = { index }
-                        className = "result-card" >
-                        <
-                        p > { post.content } < /p> <
-                        small > 📅{ post.date }⏰ { post.time } | Status: { post.status } <
-                        /small> < /
-                        div >
-                    ))
-                } <
-                /section>
-            )
-        }
+    if (handleAuthError(data)) return;
 
-        { /* MODAL */ } {
-            showModal && ( <
-                div className = "modal" >
-                <
-                div className = "modal-content" >
-                <
-                h2 > Connect Your Accounts < /h2>
+    if (!res.ok) {
+      alert(data.detail || "YouTube connect failed");
+      return;
+    }
 
-                <
-                div className = "icons" >
-                <
-                button > 📸Instagram < /button> <
-                button > 💼LinkedIn < /button> <
-                button > ▶️YouTube < /button> <
-                button > 📘Facebook < /button> < /
-                div >
+    window.location.href = data.url;
+  };
 
-                <
-                button onClick = {
-                    () => setShowModal(false)
-                } > Close < /button> < /
-                div > <
-                /div>
-            )
-        }
+  const disconnectYouTube = async () => {
+    const res = await fetch(`${BASE_URL}/connected-accounts/youtube`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    const data = await res.json();
+    alert(data.msg || data.detail || "YouTube disconnected");
+    fetchConnectedAccounts();
+  };
 
-        <
-        /div>
-    );
+  return (
+    <div className="app">
+      <header className="hero">
+        <h1>AI Social Media Automation</h1>
+        <p>Create, Schedule & Grow with AI</p>
+
+        <button onClick={() => setShowModal(true)}>Connect Accounts</button>
+
+        {isLoggedIn && (
+          <button onClick={handleLogout} style={{ marginLeft: "10px" }}>
+            Logout
+          </button>
+        )}
+      </header>
+
+      {!isLoggedIn && (
+        <AuthPanel
+          isSignup={isSignup}
+          username={username}
+          password={password}
+          onUsernameChange={(e) => setUsername(e.target.value)}
+          onPasswordChange={(e) => setPassword(e.target.value)}
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          onToggleMode={() => setIsSignup(!isSignup)}
+        />
+      )}
+
+      {isLoggedIn && (
+        <>
+          <RecentPosts scheduledData={scheduledData} connectedAccounts={connectedAccounts} />
+          <Generator
+            topic={topic}
+            result={result}
+            date={date}
+            time={time}
+            onTopicChange={(e) => setTopic(e.target.value)}
+            onGenerate={generateContent}
+            onDateChange={(e) => setDate(e.target.value)}
+            onTimeChange={(e) => setTime(e.target.value)}
+            onSchedule={schedulePost}
+            onPostNow={postNowLinkedIn}
+          />
+          <Dashboard posts={posts} scheduledData={scheduledData} />
+        </>
+      )}
+
+      {showModal && (
+        <ConnectModal
+          connectedAccounts={connectedAccounts}
+          onConnectInstagram={connectInstagram}
+          onDisconnectInstagram={disconnectInstagram}
+          onConnectLinkedIn={connectLinkedIn}
+          onDisconnectLinkedIn={disconnectLinkedIn}
+          onConnectYouTube={connectYouTube}
+          onDisconnectYouTube={disconnectYouTube}
+          onConnectFacebook={connectFacebook}
+          onDisconnectFacebook={disconnectFacebook}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
+      <CustomerSupport />
+    </div>
+  );
 }
 
 export default App;

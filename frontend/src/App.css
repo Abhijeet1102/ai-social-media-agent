@@ -58,6 +58,11 @@ button {
     cursor: pointer;
 }
 
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .result-card {
     margin-top: 30px;
     background: white;
@@ -86,10 +91,11 @@ button {
 
 .modal-content {
     background: white;
+    color: #1f2937;
     padding: 30px;
     border-radius: 12px;
     text-align: center;
-    width: 300px;
+    width: min(360px, calc(100% - 40px));
 }
 
 .icons button {
@@ -99,17 +105,158 @@ button {
     padding: 10px;
     border-radius: 8px;
     border: none;
-    background: #f1f1f1;
+    background: #6c63ff;
+    color: white;
     cursor: pointer;
+}
+
+.icons button:disabled {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.account-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.account-dropdown {
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.account-trigger {
+    align-items: center;
+    background: #6c63ff;
+    border-radius: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.account-panel {
+    background: #f8fafc;
+    color: #1f2937;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    text-align: left;
+}
+
+.account-panel span,
+.account-panel small {
+    overflow-wrap: anywhere;
+}
+
+.account-panel button {
+    width: 100%;
+}
+
+.danger-button {
+    background: #dc2626;
 }
 
 .close-btn {
     margin-top: 15px;
-    background: red;
+    background: #dc2626;
     color: white;
 }
 
 input[type="date"],
 input[type="time"] {
     margin: 5px;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.top-section {
+    margin: 24px auto 0;
+    max-width: 760px;
+    width: calc(100% - 32px);
+}
+
+.support-panel,
+.recent-panel {
+    background: white;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.06);
+    color: #1f2937;
+    padding: 16px;
+    text-align: left;
+}
+
+.support-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.section-trigger {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.platform-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.platform-button {
+    background: #f1f5f9;
+    color: #1f2937;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 70px;
+}
+
+.platform-button.active {
+    background: #6c63ff;
+    color: white;
+}
+
+.recent-list {
+    margin-top: 16px;
+}
+
+.recent-item {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 0;
+}
+
+.customer-footer {
+    background: linear-gradient(135deg, #6c63ff, #4cafef);
+    color: white;
+    margin-top: 40px;
+    padding: 30px 16px;
+}
+
+.customer-footer h2 {
+    margin-top: 0;
+}
+
+.customer-footer .support-panel {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: white;
+    margin: 0 auto;
+    max-width: 760px;
+}
+
+.customer-footer a {
+    color: white;
+    font-weight: bold;
 }

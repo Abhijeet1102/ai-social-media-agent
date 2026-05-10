@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="720" viewBox="0 0 1100 720">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#111"/>
+    </marker>
+    <style>
+      .line { stroke: #111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .thin { stroke: #111; stroke-width: 4; fill: none; }
+      .box { fill: #fff; stroke: #111; stroke-width: 4; }
+      .circle { fill: #fff; stroke: #111; stroke-width: 4; }
+      .text { font-family: Arial, Helvetica, sans-serif; fill: #111; font-size: 34px; }
+      .small { font-family: Arial, Helvetica, sans-serif; fill: #111; font-size: 28px; }
+      .title { font-family: Arial, Helvetica, sans-serif; fill: #111; font-size: 44px; }
+    </style>
+  </defs>
+
+  <!-- User actor -->
+  <circle cx="135" cy="160" r="20" class="thin"/>
+  <line x1="135" y1="180" x2="135" y2="265" class="thin"/>
+  <line x1="92" y1="215" x2="178" y2="215" class="thin"/>
+  <line x1="135" y1="265" x2="88" y2="345" class="thin"/>
+  <line x1="135" y1="265" x2="182" y2="345" class="thin"/>
+  <text x="80" y="390" class="text">User</text>
+
+  <!-- Main process -->
+  <circle cx="520" cy="260" r="115" class="circle"/>
+  <text x="420" y="270" class="text">SocialGenie</text>
+
+  <!-- User to process -->
+  <line x1="205" y1="255" x2="395" y2="255" class="line"/>
+  <text x="255" y="220" class="small">Enter Topic</text>
+  <text x="255" y="255" class="small">/ Request Caption</text>
+
+  <!-- AI service box -->
+  <rect x="760" y="45" width="260" height="125" class="box"/>
+  <text x="800" y="95" class="text">AI Content</text>
+  <text x="778" y="135" class="text">Generation</text>
+  <path d="M760 125 H700 Q665 125 665 165 V220 Q665 240 642 245" class="line"/>
+  <text x="545" y="75" class="small">Generate</text>
+  <text x="535" y="110" class="small">Caption</text>
+
+  <!-- Database box -->
+  <rect x="760" y="285" width="260" height="125" class="box"/>
+  <text x="815" y="335" class="text">MongoDB</text>
+  <text x="805" y="375" class="text">Database</text>
+  <path d="M760 345 H700 Q665 345 665 315 V292 Q665 274 642 272" class="line"/>
+  <text x="560" y="420" class="small">Store / Retrieve</text>
+  <text x="615" y="455" class="small">Posts</text>
+
+  <!-- Social media platform box -->
+  <rect x="760" y="510" width="260" height="125" class="box"/>
+  <text x="795" y="560" class="text">Social Media</text>
+  <text x="815" y="600" class="text">Platform</text>
+  <path d="M635 318 Q690 410 760 570" class="line"/>
+  <text x="555" y="545" class="small">Schedule /</text>
+  <text x="575" y="580" class="small">Publish</text>
+
+  <!-- Process to user response -->
+  <path d="M430 332 C330 440 240 445 165 400" class="line"/>
+  <text x="235" y="470" class="small">Generated Content</text>
+  <text x="285" y="505" class="small">/ Status</text>
+
+  <text x="405" y="680" class="title">DFD Level-0</text>
+</svg>
